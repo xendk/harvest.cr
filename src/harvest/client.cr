@@ -11,6 +11,24 @@ module Harvest
       }
     end
 
+    protected def uri(path : String, params : URI::Params? = nil)
+      uri = BASE_URI.resolve(path)
+
+      uri.query_params = params unless !params || params.empty?
+      uri
+    end
+
+    protected def get(path : String, params : URI::Params? = nil)
+      res = HTTP::Client.get(
+        uri(path, params),
+        headers: @headers
+      )
+
+      raise Error.new(res.body.to_s) unless res.success?
+
+      res
+    end
+
     # Get time entries.
     #
     # Get the entries *from* *to*.
@@ -19,18 +37,19 @@ module Harvest
       params["from"] = from.to_s("%Y-%m-%d") if from
       params["to"] = to.to_s("%Y-%m-%d") if to
 
-      uri = BASE_URI.resolve("time_entries")
-
-      uri.query_params = params unless params.empty?
-
-      res = HTTP::Client.get(
-        uri,
-        headers: @headers
-      )
-
-      raise Error.new(res.body.to_s) unless res.success?
+      res = get("time_entries", params)
 
       (TimeEntriesResponse.from_json res.body).time_entries
+    end
+
+    # Get users.
+    def users(*, is_active : Bool = false)
+      params = URI::Params.new
+      params["is_active"] = "true" if is_active
+
+      res = get("users", params)
+
+      (UsersResponse.from_json res.body).users
     end
   end
 
@@ -38,5 +57,11 @@ module Harvest
     include JSON::Serializable
 
     property time_entries : Array(TimeEntry)
+  end
+
+  class UsersResponse
+    include JSON::Serializable
+
+    property users : Array(User)
   end
 end
