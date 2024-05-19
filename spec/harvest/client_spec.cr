@@ -48,6 +48,25 @@ describe Harvest::Client do
         to: Time.utc(2024, 5, 19),
       )
     end
+
+    it "supports fetching by user" do
+      WebMock.stub(:get, "https://api.harvestapp.com/v2/time_entries?user_id=123")
+        .with(headers: expected_headers)
+        .to_return(body: "{\"time_entries\":[]}")
+      WebMock.stub(:get, "https://api.harvestapp.com/v2/time_entries?user_id=951")
+        .with(headers: expected_headers)
+        .to_return(body: "{\"time_entries\":[]}")
+      WebMock.stub(:get, "https://api.harvestapp.com/v2/time_entries?user_id=456")
+        .with(headers: expected_headers)
+        .to_return(body: "{\"time_entries\":[]}")
+
+      user = Harvest::User.from_json("{\"id\":951,\"first_name\":\"John\",\"last_name\":\"Doe\",\"email\":\"jd@example.dk\",\"is_contractor\":false,\"is_active\":true,\"created_at\":\"2024-04-17T12:23:10Z\",\"updated_at\":\"2024-05-06T14:03:38Z\"}")
+      user_ref = Harvest::UserRef.from_json("{\"id\":456,\"name\":\"The Tester\"}")
+
+      Harvest.new("123", "token").time_entries(user: "123")
+      Harvest.new("123", "token").time_entries(user: user)
+      Harvest.new("123", "token").time_entries(user: user_ref)
+    end
   end
 
   context "#users" do
