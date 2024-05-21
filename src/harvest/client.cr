@@ -18,15 +18,30 @@ module Harvest
       uri
     end
 
-    protected def get(path : String, params : URI::Params? = nil)
-      res = HTTP::Client.get(
-        uri(path, params),
-        headers: @headers
-      )
+    # Perform a GET request on the given *path*.
+    #
+    # Handles pagination and yields the *klass* to the block for each
+    # page.
+    protected def get(path : String, klass : HarvestResponse.class, params : URI::Params? = nil)
+      page = 1
+      loop do
+        res = HTTP::Client.get(
+          uri(path, params),
+          headers: @headers
+        )
 
-      raise Error.new(res.body.to_s) unless res.success?
+        raise Error.new(res.body.to_s) unless res.success?
 
-      res
+        response = klass.from_json(res.body)
+        yield response
+
+        if response.total_pages <= page
+          break
+        end
+
+        page += 1
+        params["page"] = page.to_s
+      end
     end
 
     # Get time entries.
@@ -44,46 +59,41 @@ module Harvest
           params["user_id"] = user.id.to_s
         end
       end
-      res = get("time_entries", params)
-      response = TimeEntriesResponse.from_json res.body
-      time_entries = response.time_entries
-
-      if response.total_pages > 1
-        page = 1
-        while page < response.total_pages
-          page += 1
-          params["page"] = page.to_s
-
-          res = get("time_entries", params)
-          response = TimeEntriesResponse.from_json res.body
-          time_entries += response.time_entries
-        end
+      time_entries = [] of TimeEntry
+      res = get("time_entries", TimeEntriesResponse, params) do |response|
+        time_entries.concat response.time_entries
       end
 
       time_entries
     end
 
     # Get users.
+    #
+    # Users can be limited to active users.
     def users(*, is_active : Bool = false)
       params = URI::Params.new
       params["is_active"] = "true" if is_active
 
-      res = get("users", params)
+      users = [] of User
+      res = get("users", UsersResponse, params) do |response|
+        users.concat response.users
+      end
 
-      (UsersResponse.from_json res.body).users
+      users
     end
   end
 
-  class TimeEntriesResponse
+  class HarvestResponse
     include JSON::Serializable
 
-    property time_entries : Array(TimeEntry)
     property total_pages : Int64
   end
 
-  class UsersResponse
-    include JSON::Serializable
+  class TimeEntriesResponse < HarvestResponse
+    property time_entries : Array(TimeEntry)
+  end
 
+  class UsersResponse < HarvestResponse
     property users : Array(User)
   end
 end

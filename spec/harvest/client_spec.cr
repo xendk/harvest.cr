@@ -74,7 +74,7 @@ describe Harvest::Client do
     it "fetches users" do
       WebMock.stub(:get, "https://api.harvestapp.com/v2/users")
         .with(headers: expected_headers)
-        .to_return(body: %({"users":[{"id":951,"first_name":"John","last_name":"Doe","email":"jd@example.dk","is_contractor":false,"is_active":true,"created_at":"2024-04-17T12:23:10Z","updated_at":"2024-05-06T14:03:38Z","access_roles":["member"]}]}))
+        .to_return(body: %({"users":[{"id":951,"first_name":"John","last_name":"Doe","email":"jd@example.dk","is_contractor":false,"is_active":true,"created_at":"2024-04-17T12:23:10Z","updated_at":"2024-05-06T14:03:38Z","access_roles":["member"]}],"total_pages":1}))
 
       result = Harvest.new("123", "token").users
 
@@ -92,7 +92,7 @@ describe Harvest::Client do
     it "supports is_active argument" do
       WebMock.stub(:get, "https://api.harvestapp.com/v2/users?is_active=true")
         .with(headers: expected_headers)
-        .to_return(body: "{\"users\":[]}")
+        .to_return(body: %({"users":[],"total_pages":1}))
 
       Harvest.new("123", "token").users(is_active: true)
     end
