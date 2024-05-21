@@ -5,6 +5,6 @@ module Harvest
 
     property id : Int32
     property name : String
-    property code : String
+    property code : String?
   end
 end
