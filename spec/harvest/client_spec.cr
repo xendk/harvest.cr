@@ -8,11 +8,35 @@ expected_headers = {
 
 
 describe Harvest::Client do
+  context "#get" do
+    it "supports pagination" do
+      WebMock.stub(:get, "https://api.harvestapp.com/v2/time_entries?from=2024-05-17")
+        .with(headers: expected_headers)
+        .to_return(body: %({"time_entries":[{"id":123456,"spent_date":"2024-05-18","hours":1.1,"rounded_hours":1.25,"notes":"Doing something","is_closed":false,"is_billed":false,"timer_started_at":null,"created_at":"2024-05-18T16:51:35Z","updated_at":"2024-05-18T16:51:44Z","user":{"id":456,"name":"The Tester"},"client":{"id":789,"name":"The Client","currency":"DKK"},"project":{"id":147,"name":"The Project","code":"PROJ"},"task":{"id":258,"name":"The task"}}],"links": {"next": "https://api.harvestapp.com/v2/time_entries?cursor=banana"}}))
+      WebMock.stub(:get, "https://api.harvestapp.com/v2/time_entries?cursor=banana")
+        .with(headers: expected_headers)
+        .to_return(body: %({"time_entries":[{"id":654321,"spent_date":"2024-05-18","hours":1.1,"rounded_hours":1.25,"notes":"Doing something","is_closed":false,"is_billed":false,"timer_started_at":null,"created_at":"2024-05-18T16:51:35Z","updated_at":"2024-05-18T16:51:44Z","user":{"id":456,"name":"The Tester"},"client":{"id":789,"name":"The Client","currency":"DKK"},"project":{"id":147,"name":"The Project","code":"PROJ"},"task":{"id":258,"name":"The task"}}],"links": {"next": null}}))
+
+      # Need to ensure that the URI is unique as WebMock stubs are global.
+      params = URI::Params.new
+      params["from"] = "2024-05-17"
+
+      entries = [] of Harvest::TimeEntry
+      Harvest.new("123", "token").get("time_entries", Harvest::TimeEntriesResponse, params) do |response|
+        entries.concat response.time_entries
+      end
+
+      entries.size.should eq 2
+      entries[0].id.should eq 123456
+      entries[1].id.should eq 654321
+    end
+  end
+
   context "#time_entries" do
     it "fetches time entries" do
       WebMock.stub(:get, "https://api.harvestapp.com/v2/time_entries")
         .with(headers: expected_headers)
-        .to_return(body: %({"time_entries":[{"id":123456,"spent_date":"2024-05-18","hours":1.1,"rounded_hours":1.25,"notes":"Doing something","is_closed":false,"is_billed":false,"timer_started_at":null,"created_at":"2024-05-18T16:51:35Z","updated_at":"2024-05-18T16:51:44Z","user":{"id":456,"name":"The Tester"},"client":{"id":789,"name":"The Client","currency":"DKK"},"project":{"id":147,"name":"The Project","code":"PROJ"},"task":{"id":258,"name":"The task"}}],"total_pages":1}))
+        .to_return(body: %({"time_entries":[{"id":123456,"spent_date":"2024-05-18","hours":1.1,"rounded_hours":1.25,"notes":"Doing something","is_closed":false,"is_billed":false,"timer_started_at":null,"created_at":"2024-05-18T16:51:35Z","updated_at":"2024-05-18T16:51:44Z","user":{"id":456,"name":"The Tester"},"client":{"id":789,"name":"The Client","currency":"DKK"},"project":{"id":147,"name":"The Project","code":"PROJ"},"task":{"id":258,"name":"The task"}}],"links": {"next": null}}))
 
       result = Harvest.new("123", "token").time_entries
 
@@ -42,7 +66,7 @@ describe Harvest::Client do
     it "supports from and to arguments" do
       WebMock.stub(:get, "https://api.harvestapp.com/v2/time_entries?from=2024-05-18&to=2024-05-19")
         .with(headers: expected_headers)
-        .to_return(body: %({"time_entries":[],"total_pages":1}))
+        .to_return(body: %({"time_entries":[],"links": {"next": null}}))
 
       Harvest.new("123", "token").time_entries(
         from: Time.utc(2024, 5, 18),
@@ -53,13 +77,13 @@ describe Harvest::Client do
     it "supports fetching by user" do
       WebMock.stub(:get, "https://api.harvestapp.com/v2/time_entries?user_id=123")
         .with(headers: expected_headers)
-        .to_return(body: %({"time_entries":[],"total_pages":1}))
+        .to_return(body: %({"time_entries":[],"links": {"next": null}}))
       WebMock.stub(:get, "https://api.harvestapp.com/v2/time_entries?user_id=951")
         .with(headers: expected_headers)
-        .to_return(body: %({"time_entries":[],"total_pages":1}))
+        .to_return(body: %({"time_entries":[],"links": {"next": null}}))
       WebMock.stub(:get, "https://api.harvestapp.com/v2/time_entries?user_id=456")
         .with(headers: expected_headers)
-        .to_return(body: %({"time_entries":[],"total_pages":1}))
+        .to_return(body: %({"time_entries":[],"links": {"next": null}}))
 
       user = Harvest::User.from_json(%({"id":951,"first_name":"John","last_name":"Doe","email":"jd@example.dk","is_contractor":false,"is_active":true,"created_at":"2024-04-17T12:23:10Z","updated_at":"2024-05-06T14:03:38Z","access_roles":["member"]}))
       user_ref = Harvest::UserRef.from_json(%({"id":456,"name":"The Tester"}))
@@ -74,7 +98,7 @@ describe Harvest::Client do
     it "fetches users" do
       WebMock.stub(:get, "https://api.harvestapp.com/v2/users")
         .with(headers: expected_headers)
-        .to_return(body: %({"users":[{"id":951,"first_name":"John","last_name":"Doe","email":"jd@example.dk","is_contractor":false,"is_active":true,"created_at":"2024-04-17T12:23:10Z","updated_at":"2024-05-06T14:03:38Z","access_roles":["member"]}],"total_pages":1}))
+        .to_return(body: %({"users":[{"id":951,"first_name":"John","last_name":"Doe","email":"jd@example.dk","is_contractor":false,"is_active":true,"created_at":"2024-04-17T12:23:10Z","updated_at":"2024-05-06T14:03:38Z","access_roles":["member"]}],"links": {"next": null}}))
 
       result = Harvest.new("123", "token").users
 
@@ -92,9 +116,13 @@ describe Harvest::Client do
     it "supports is_active argument" do
       WebMock.stub(:get, "https://api.harvestapp.com/v2/users?is_active=true")
         .with(headers: expected_headers)
-        .to_return(body: %({"users":[],"total_pages":1}))
+        .to_return(body: %({"users":[],"links": {"next": null}}))
 
       Harvest.new("123", "token").users(is_active: true)
     end
   end
+
+  # context "#task" do
+
+  # end
 end

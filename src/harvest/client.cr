@@ -22,11 +22,11 @@ module Harvest
     #
     # Handles pagination and yields the *klass* to the block for each
     # page.
-    protected def get(path : String, klass : HarvestResponse.class, params : URI::Params? = nil)
-      page = 1
+    def get(path : String, klass : HarvestResponse.class, params : URI::Params? = nil)
+      uri = uri(path, params)
       loop do
         res = HTTP::Client.get(
-          uri(path, params),
+          uri,
           headers: @headers
         )
 
@@ -35,12 +35,12 @@ module Harvest
         response = klass.from_json(res.body)
         yield response
 
-        if response.total_pages <= page
+        next_page = response.links.next
+        if !next_page
           break
         end
 
-        page += 1
-        params["page"] = page.to_s
+        uri = next_page
       end
     end
 
@@ -60,7 +60,7 @@ module Harvest
         end
       end
       time_entries = [] of TimeEntry
-      res = get("time_entries", TimeEntriesResponse, params) do |response|
+      get("time_entries", TimeEntriesResponse, params) do |response|
         time_entries.concat response.time_entries
       end
 
@@ -75,7 +75,7 @@ module Harvest
       params["is_active"] = "true" if is_active
 
       users = [] of User
-      res = get("users", UsersResponse, params) do |response|
+      get("users", UsersResponse, params) do |response|
         users.concat response.users
       end
 
@@ -86,7 +86,7 @@ module Harvest
   class HarvestResponse
     include JSON::Serializable
 
-    property total_pages : Int64
+    property links : PaginationLinks
   end
 
   class TimeEntriesResponse < HarvestResponse
@@ -95,5 +95,11 @@ module Harvest
 
   class UsersResponse < HarvestResponse
     property users : Array(User)
+  end
+
+  class PaginationLinks
+    include JSON::Serializable
+
+    property next : String?
   end
 end
