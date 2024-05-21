@@ -45,8 +45,22 @@ module Harvest
         end
       end
       res = get("time_entries", params)
+      response = TimeEntriesResponse.from_json res.body
+      time_entries = response.time_entries
 
-      (TimeEntriesResponse.from_json res.body).time_entries
+      if response.total_pages > 1
+        page = 1
+        while page < response.total_pages
+          page += 1
+          params["page"] = page.to_s
+
+          res = get("time_entries", params)
+          response = TimeEntriesResponse.from_json res.body
+          time_entries += response.time_entries
+        end
+      end
+
+      time_entries
     end
 
     # Get users.
@@ -64,6 +78,7 @@ module Harvest
     include JSON::Serializable
 
     property time_entries : Array(TimeEntry)
+    property total_pages : Int64
   end
 
   class UsersResponse
