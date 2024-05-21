@@ -5,9 +5,13 @@ require "option_parser"
 account_id : String? = nil
 token : String? = nil
 command = :none
+
+# time_entries
 from_date = nil
 to_date = nil
 
+# users
+active = false
 def die!(message)
   puts message
   exit 1
@@ -36,6 +40,14 @@ parser = OptionParser.parse(ARGV) do |parser|
       to_date = Time.parse(date_string, "%Y-%m-%d", Time::Location::UTC)
     end
   end
+
+  parser.on("users", "Get users") do
+    command = :users
+
+    parser.on("-a", "--active", "Get active users") do |date_string|
+      from_date = Time.parse(date_string, "%Y-%m-%d", Time::Location::UTC)
+    end
+  end
 end
 
 puts parser if command == :none
@@ -43,7 +55,10 @@ puts parser if command == :none
 die! "No account" unless account_id
 die! "No token" unless token
 
+harvest = Harvest.new(account_id.not_nil!, token.not_nil!)
 case command
 when :time_entries
-  pp Harvest.new(account_id.not_nil!, token.not_nil!).time_entries(from: from_date, to: to_date)
+  pp harvest.time_entries(from: from_date, to: to_date)
+when :users
+  pp harvest.users(is_active: active)
 end
