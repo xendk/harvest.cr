@@ -81,6 +81,16 @@ module Harvest
 
       users
     end
+
+    # Get tasks.
+    def tasks()
+      tasks = [] of Task
+      get("tasks", TasksResponse) do |response|
+        tasks.concat response.tasks
+      end
+
+      tasks
+    end
   end
 
   class HarvestResponse
@@ -95,6 +105,10 @@ module Harvest
 
   class UsersResponse < HarvestResponse
     property users : Array(User)
+  end
+
+  class TasksResponse < HarvestResponse
+    property tasks : Array(Task)
   end
 
   class PaginationLinks

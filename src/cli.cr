@@ -48,6 +48,10 @@ parser = OptionParser.parse(ARGV) do |parser|
       from_date = Time.parse(date_string, "%Y-%m-%d", Time::Location::UTC)
     end
   end
+
+  parser.on("tasks", "Get tasks") do
+    command = :tasks
+  end
 end
 
 puts parser if command == :none
@@ -61,4 +65,6 @@ when :time_entries
   pp harvest.time_entries(from: from_date, to: to_date)
 when :users
   pp harvest.users(is_active: active)
+when :tasks
+  pp harvest.tasks
 end

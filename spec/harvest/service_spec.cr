@@ -122,7 +122,20 @@ describe Harvest::Service do
     end
   end
 
-  # context "#task" do
+  context "#tasks" do
+    it "fetches tasks" do
+      WebMock.stub(:get, "https://api.harvestapp.com/v2/tasks")
+        .with(headers: expected_headers)
+        .to_return(body: %({"tasks":[{"id":753,"name":"Some important task","billable_by_default":true,"created_at":"2024-05-22T09:16:26Z","updated_at":"2024-05-22T09:17:26Z"}],"links": {"next": null}}))
 
-  # end
+      result = Harvest.new("123", "token").tasks
+
+      result.size.should eq 1
+      result[0].id.should eq 753
+      result[0].name.should eq "Some important task"
+      result[0].billable_by_default.should eq true
+      result[0].created_at.should eq Time.utc(2024, 5, 22, 9, 16, 26)
+      result[0].updated_at.should eq Time.utc(2024, 5, 22, 9, 17, 26)
+    end
+  end
 end
