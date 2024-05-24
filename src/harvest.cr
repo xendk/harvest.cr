@@ -11,6 +11,6 @@ module Harvest
 
   # Get a client instance.
   def self.new(account_id : String, token : String)
-    Client.new(account_id, token)
+    Service.new(account_id, token)
   end
 end

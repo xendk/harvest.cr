@@ -1,6 +1,6 @@
 module Harvest
   # A Harvest client.
-  class Client
+  class Service
     BASE_URI = URI.parse("https://api.harvestapp.com/v2/")
 
     def initialize(account_id : String, token : String)

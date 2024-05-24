@@ -7,7 +7,7 @@ expected_headers = {
 }
 
 
-describe Harvest::Client do
+describe Harvest::Service do
   context "#get" do
     it "supports pagination" do
       WebMock.stub(:get, "https://api.harvestapp.com/v2/time_entries?from=2024-05-17")
