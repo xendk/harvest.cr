@@ -3,7 +3,7 @@ module Harvest
   class ClientRef
     include JSON::Serializable
 
-    property id : Int32
+    property id : Int64
     property name : String
     property currency : String
   end

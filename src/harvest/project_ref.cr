@@ -3,7 +3,7 @@ module Harvest
   class ProjectRef
     include JSON::Serializable
 
-    property id : Int32
+    property id : Int64
     property name : String
     property code : String?
   end

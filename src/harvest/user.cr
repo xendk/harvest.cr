@@ -3,7 +3,7 @@ module Harvest
   class User
     include JSON::Serializable
 
-    property id : Int32
+    property id : Int64
     property first_name : String
     property last_name : String
     property email : String
