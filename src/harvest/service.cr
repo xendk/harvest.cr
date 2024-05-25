@@ -47,7 +47,7 @@ module Harvest
     # Get time entries.
     #
     # Entries can be limited by *from*, *to* and *user*.
-    def time_entries(*, from : Time? = nil, to : Time? = nil, user : String | User | UserRef | Nil = nil)
+    def time_entries(*, from : Time? = nil, to : Time? = nil, user : Int | String | User | UserRef | Nil = nil)
       params = URI::Params.new
       params["from"] = from.to_s("%Y-%m-%d") if from
       params["to"] = to.to_s("%Y-%m-%d") if to
@@ -55,6 +55,8 @@ module Harvest
         case user
         when String
           params["user_id"] = user
+        when Int
+          params["user_id"] = user.to_s
         else
           params["user_id"] = user.id.to_s
         end
