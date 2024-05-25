@@ -138,4 +138,22 @@ describe Harvest::Service do
       result[0].updated_at.should eq Time.utc(2024, 5, 22, 9, 17, 26)
     end
   end
+
+  context "#projects" do
+    it "fetches projects" do
+      WebMock.stub(:get, "https://api.harvestapp.com/v2/projects")
+        .with(headers: expected_headers)
+        .to_return(body: %({"projects":[{"id":153,"name":"Some project","is_active":true,"is_billable":false,"created_at":"2024-04-23T08:26:56Z","updated_at":"2024-04-24T08:26:56Z"}],"links": {"next": null}}))
+
+      result = Harvest.new("123", "token").projects
+
+      result.size.should eq 1
+      result[0].id.should eq 153
+      result[0].name.should eq "Some project"
+      result[0].is_active.should eq true
+      result[0].is_billable.should eq false
+      result[0].created_at.should eq Time.utc(2024, 4, 23, 8, 26, 56)
+      result[0].updated_at.should eq Time.utc(2024, 4, 24, 8, 26, 56)
+    end
+  end
 end

@@ -52,6 +52,10 @@ parser = OptionParser.parse(ARGV) do |parser|
   parser.on("tasks", "Get tasks") do
     command = :tasks
   end
+
+  parser.on("projects", "Get projects") do
+    command = :projects
+  end
 end
 
 puts parser if command == :none
@@ -67,4 +71,6 @@ when :users
   pp harvest.users(is_active: active)
 when :tasks
   pp harvest.tasks
+when :projects
+  pp harvest.projects
 end
