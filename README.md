@@ -13,7 +13,7 @@ start and end time", you'll have to test thoroughly.
    ```yaml
    dependencies:
      harvest:
-       github: xendk/harvest
+       github: xendk/harvest.cr
    ```
 
 2. Run `shards install`
@@ -24,11 +24,15 @@ start and end time", you'll have to test thoroughly.
 require "harvest"
 ```
 
-TODO: Write usage instructions here
+Basic usage:
 
-## Development
+```
+harvest = Harvest.new(account_id, token)
+pp harvest.time_entries(from: from_date, to: to_date)
+```
 
-TODO: Write development instructions here
+See `src/cli.cr` for an small example. It can be built with `shards
+build` and is handy for testing.
 
 ## Contributing
 
