@@ -92,6 +92,16 @@ describe Harvest::Service do
       Harvest.new("123", "token").time_entries(user: user)
       Harvest.new("123", "token").time_entries(user: user_ref)
     end
+
+    it "supports updated_since argument" do
+      WebMock.stub(:get, "https://api.harvestapp.com/v2/time_entries?updated_since=2024-05-24T08%3A39%3A36Z")
+        .with(headers: expected_headers)
+        .to_return(body: %({"time_entries":[],"links": {"next": null}}))
+
+      Harvest.new("123", "token").time_entries(
+        updated_since: Time.utc(2024, 5, 24, 8, 39, 36),
+      )
+    end
   end
 
   context "#users" do
@@ -120,6 +130,14 @@ describe Harvest::Service do
 
       Harvest.new("123", "token").users(is_active: true)
     end
+
+    it "supports updated_since argument" do
+      WebMock.stub(:get, "https://api.harvestapp.com/v2/users?updated_since=2024-05-24T08%3A39%3A36Z")
+        .with(headers: expected_headers)
+        .to_return(body: %({"users":[],"links": {"next": null}}))
+
+      Harvest.new("123", "token").users(updated_since: Time.utc(2024, 5, 24, 8, 39, 36))
+    end
   end
 
   context "#tasks" do
@@ -136,6 +154,14 @@ describe Harvest::Service do
       result[0].billable_by_default.should eq true
       result[0].created_at.should eq Time.utc(2024, 5, 22, 9, 16, 26)
       result[0].updated_at.should eq Time.utc(2024, 5, 22, 9, 17, 26)
+    end
+
+    it "supports updated_since argument" do
+      WebMock.stub(:get, "https://api.harvestapp.com/v2/tasks?updated_since=2024-05-24T08%3A39%3A36Z")
+        .with(headers: expected_headers)
+        .to_return(body: %({"tasks":[],"links": {"next": null}}))
+
+      Harvest.new("123", "token").tasks(updated_since: Time.utc(2024, 5, 24, 8, 39, 36))
     end
   end
 
@@ -154,6 +180,14 @@ describe Harvest::Service do
       result[0].is_billable.should eq false
       result[0].created_at.should eq Time.utc(2024, 4, 23, 8, 26, 56)
       result[0].updated_at.should eq Time.utc(2024, 4, 24, 8, 26, 56)
+    end
+
+    it "supports updated_since argument" do
+      WebMock.stub(:get, "https://api.harvestapp.com/v2/projects?updated_since=2024-05-24T08%3A39%3A36Z")
+        .with(headers: expected_headers)
+        .to_return(body: %({"projects":[],"links": {"next": null}}))
+
+      Harvest.new("123", "token").projects(updated_since: Time.utc(2024, 5, 24, 8, 39, 36))
     end
   end
 end

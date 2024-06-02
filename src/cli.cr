@@ -5,7 +5,7 @@ require "option_parser"
 account_id : String? = nil
 token : String? = nil
 command = :none
-
+updated_since : Time? = nil
 # time_entries
 from_date = nil
 to_date = nil
@@ -28,6 +28,9 @@ parser = OptionParser.parse(ARGV) do |parser|
 
   parser.on("-a ID", "--account=ID", "Account ID") { |_account_id| account_id = _account_id }
   parser.on("-t TOKEN", "--token=TOKEN", "Personal access token") { |_token| token = _token }
+  parser.on("-u DATE", "--updated-since=DATE", "Updated since") do |date_string|
+    updated_since = Time.parse(date_string, "%Y-%m-%dT%H:%M:%S", Time::Location::UTC)
+  end
 
   parser.on("time_entries", "Get time entries") do
     command = :time_entries
@@ -66,11 +69,11 @@ die! "No token" unless token
 harvest = Harvest.new(account_id.not_nil!, token.not_nil!)
 case command
 when :time_entries
-  pp harvest.time_entries(from: from_date, to: to_date)
+  pp harvest.time_entries(from: from_date, to: to_date, updated_since: updated_since)
 when :users
-  pp harvest.users(is_active: active)
+  pp harvest.users(is_active: active, updated_since: updated_since)
 when :tasks
-  pp harvest.tasks
+  pp harvest.tasks(updated_since: updated_since)
 when :projects
-  pp harvest.projects
+  pp harvest.projects(updated_since: updated_since)
 end

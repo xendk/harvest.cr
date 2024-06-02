@@ -47,8 +47,9 @@ module Harvest
     # Get time entries.
     #
     # Entries can be limited by *from*, *to* and *user*.
-    def time_entries(*, from : Time? = nil, to : Time? = nil, user : Int | String | User | UserRef | Nil = nil)
+    def time_entries(*, from : Time? = nil, to : Time? = nil, user : Int | String | User | UserRef | Nil = nil, updated_since : Time? = nil)
       params = URI::Params.new
+      params["updated_since"] = updated_since.to_rfc3339 if updated_since
       params["from"] = from.to_s("%Y-%m-%d") if from
       params["to"] = to.to_s("%Y-%m-%d") if to
       if user
@@ -72,8 +73,9 @@ module Harvest
     # Get users.
     #
     # Users can be limited to active users.
-    def users(*, is_active : Bool = false)
+    def users(*, is_active : Bool = false, updated_since : Time? = nil)
       params = URI::Params.new
+      params["updated_since"] = updated_since.to_rfc3339 if updated_since
       params["is_active"] = "true" if is_active
 
       users = [] of User
@@ -85,9 +87,12 @@ module Harvest
     end
 
     # Get tasks.
-    def tasks()
+    def tasks(updated_since : Time? = nil)
+      params = URI::Params.new
+      params["updated_since"] = updated_since.to_rfc3339 if updated_since
+
       tasks = [] of Task
-      get("tasks", TasksResponse) do |response|
+      get("tasks", TasksResponse, params) do |response|
         tasks.concat response.tasks
       end
 
@@ -95,9 +100,12 @@ module Harvest
     end
 
     # Get projects.
-    def projects()
+    def projects(updated_since : Time? = nil)
+      params = URI::Params.new
+      params["updated_since"] = updated_since.to_rfc3339 if updated_since
+
       projects = [] of Project
-      get("projects", ProjectsResponse) do |response|
+      get("projects", ProjectsResponse, params) do |response|
         projects.concat response.projects
       end
 
