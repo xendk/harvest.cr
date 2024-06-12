@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.3.0 - 2024-06-12
 
+### Fixed
+
+- Fix version in shard.yml.
+
+## 0.3.0 - 2024-06-12
+
 ### Added
 
 - Block variants of fetching methods. Currently just calls the
