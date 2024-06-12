@@ -70,6 +70,13 @@ module Harvest
       time_entries
     end
 
+    # :ditto:
+    def time_entries(*, from : Time? = nil, to : Time? = nil, user : Int | String | User | UserRef | Nil = nil, updated_since : Time? = nil, &)
+      time_entries(from: from, to: to, user: user, updated_since: updated_since).each do |time_entry|
+        yield time_entry
+      end
+    end
+
     # Get users.
     #
     # Users can be limited to active users.
@@ -86,6 +93,13 @@ module Harvest
       users
     end
 
+    # :ditto:
+    def users(*, is_active : Bool = false, updated_since : Time? = nil, &)
+      users(is_active: is_active, updated_since: updated_since).each do |user|
+        yield user
+      end
+    end
+
     # Get tasks.
     def tasks(updated_since : Time? = nil)
       params = URI::Params.new
@@ -99,6 +113,13 @@ module Harvest
       tasks
     end
 
+    # :ditto:
+    def tasks(updated_since : Time? = nil, &)
+      tasks(updated_since: updated_since).each do |task|
+        yield task
+      end
+    end
+
     # Get projects.
     def projects(updated_since : Time? = nil)
       params = URI::Params.new
@@ -110,6 +131,13 @@ module Harvest
       end
 
       projects
+    end
+
+    # :ditto:
+    def projects(updated_since : Time? = nil, &)
+      projets(updated_since: updated_since).each do |project|
+        yield project
+      end
     end
   end
 
