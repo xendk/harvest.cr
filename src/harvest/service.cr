@@ -48,6 +48,17 @@ module Harvest
     #
     # Entries can be limited by *from*, *to* and *user*.
     def time_entries(*, from : Time? = nil, to : Time? = nil, user : Int | String | User | UserRef | Nil = nil, updated_since : Time? = nil)
+      time_entries = [] of TimeEntry
+
+      time_entries(from: from, to: to, user: user, updated_since: updated_since) do |time_entry|
+        time_entries << time_entry
+      end
+
+      time_entries
+    end
+
+    # :ditto:
+    def time_entries(*, from : Time? = nil, to : Time? = nil, user : Int | String | User | UserRef | Nil = nil, updated_since : Time? = nil, &)
       params = URI::Params.new
       params["updated_since"] = updated_since.to_rfc3339 if updated_since
       params["from"] = from.to_s("%Y-%m-%d") if from
@@ -64,16 +75,9 @@ module Harvest
       end
       time_entries = [] of TimeEntry
       get("time_entries", TimeEntriesResponse, params) do |response|
-        time_entries.concat response.time_entries
-      end
-
-      time_entries
-    end
-
-    # :ditto:
-    def time_entries(*, from : Time? = nil, to : Time? = nil, user : Int | String | User | UserRef | Nil = nil, updated_since : Time? = nil, &)
-      time_entries(from: from, to: to, user: user, updated_since: updated_since).each do |time_entry|
-        yield time_entry
+        response.time_entries.each do |time_entry|
+          yield time_entry
+        end
       end
     end
 
@@ -81,13 +85,10 @@ module Harvest
     #
     # Users can be limited to active users.
     def users(*, is_active : Bool = false, updated_since : Time? = nil)
-      params = URI::Params.new
-      params["updated_since"] = updated_since.to_rfc3339 if updated_since
-      params["is_active"] = "true" if is_active
-
       users = [] of User
-      get("users", UsersResponse, params) do |response|
-        users.concat response.users
+
+      users(is_active: is_active, updated_since: updated_since) do |user|
+        users << user
       end
 
       users
@@ -95,19 +96,23 @@ module Harvest
 
     # :ditto:
     def users(*, is_active : Bool = false, updated_since : Time? = nil, &)
-      users(is_active: is_active, updated_since: updated_since).each do |user|
-        yield user
+      params = URI::Params.new
+      params["updated_since"] = updated_since.to_rfc3339 if updated_since
+      params["is_active"] = "true" if is_active
+
+      get("users", UsersResponse, params) do |response|
+        response.users.each do |user|
+          yield user
+        end
       end
     end
 
     # Get tasks.
     def tasks(updated_since : Time? = nil)
-      params = URI::Params.new
-      params["updated_since"] = updated_since.to_rfc3339 if updated_since
-
       tasks = [] of Task
-      get("tasks", TasksResponse, params) do |response|
-        tasks.concat response.tasks
+
+      tasks(updated_since: updated_since) do |task|
+        tasks << task
       end
 
       tasks
@@ -115,19 +120,22 @@ module Harvest
 
     # :ditto:
     def tasks(updated_since : Time? = nil, &)
-      tasks(updated_since: updated_since).each do |task|
-        yield task
+      params = URI::Params.new
+      params["updated_since"] = updated_since.to_rfc3339 if updated_since
+
+      get("tasks", TasksResponse, params) do |response|
+        response.tasks.each do |task|
+          yield task
+        end
       end
     end
 
     # Get projects.
     def projects(updated_since : Time? = nil)
-      params = URI::Params.new
-      params["updated_since"] = updated_since.to_rfc3339 if updated_since
-
       projects = [] of Project
-      get("projects", ProjectsResponse, params) do |response|
-        projects.concat response.projects
+
+      projects(updated_since: updated_since) do |project|
+        projects << project
       end
 
       projects
@@ -135,8 +143,13 @@ module Harvest
 
     # :ditto:
     def projects(updated_since : Time? = nil, &)
-      projets(updated_since: updated_since).each do |project|
-        yield project
+      params = URI::Params.new
+      params["updated_since"] = updated_since.to_rfc3339 if updated_since
+
+      get("projects", ProjectsResponse, params) do |response|
+        response.projects.each do |project|
+          yield project
+        end
       end
     end
   end
