@@ -13,6 +13,7 @@ module Harvest
     property is_closed : Bool
     property is_billed : Bool
     property timer_started_at : Time?
+    property billable : Bool
     property created_at : Time
     property updated_at : Time
     property user : UserRef
